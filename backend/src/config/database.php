@@ -1,25 +1,19 @@
 <?php
+declare(strict_types=1);
 
-$host = "127.0.0.1";
-$db   = "chat_app";
-$user = "root";
-$pass = ""; // ou le mot de passe défini dans ton docker
+function db(): PDO {
+  static $pdo = null;
+  if ($pdo instanceof PDO) return $pdo;
 
-try {
-    $pdo = new PDO(
-        "mysql:host=$host;dbname=$db;charset=utf8",
-        $user,
-        $pass,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-        ]
-    );
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode([
-        "error" => "Database connection failed",
-        "details" => $e->getMessage()
-    ]);
-    exit;
+  $host = getenv('DB_HOST') ?: 'db';
+  $name = getenv('DB_NAME') ?: 'chatdb';
+  $user = getenv('DB_USER') ?: 'chatuser';
+  $pass = getenv('DB_PASS') ?: 'chatpass';
+
+  $dsn = "mysql:host={$host};dbname={$name};charset=utf8mb4";
+  $pdo = new PDO($dsn, $user, $pass, [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+  ]);
+  return $pdo;
 }

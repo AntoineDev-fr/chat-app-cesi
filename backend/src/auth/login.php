@@ -1,43 +1,37 @@
 <?php
-header("Content-Type: application/json");
-require_once "../config/database.php";
+declare(strict_types=1);
 
-$data = json_decode(file_get_contents("php://input"), true);
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/http.php';
+require_once __DIR__ . '/auth.php';
 
-if (!isset($data["username"], $data["password"])) {
-    http_response_code(400);
-    echo json_encode(["error" => "Missing fields"]);
-    exit;
-}
+function login_or_register(string $username, string $password): void {
+  $username = trim($username);
 
-$username = trim($data["username"]);
-$password = $data["password"];
+  if ($username === '' || !preg_match('/^[a-zA-Z0-9_.-]{3,32}$/', $username)) {
+    json_response(['error' => 'Invalid username'], 400);
+  }
+  if (strlen($password) < 6 || strlen($password) > 200) {
+    json_response(['error' => 'Invalid password'], 400);
+  }
 
-// Recherche utilisateur
-$stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
-$stmt->execute([$username]);
-$user = $stmt->fetch();
+  $pdo = db();
+  $stmt = $pdo->prepare("SELECT id, password_hash FROM users WHERE username = :u LIMIT 1");
+  $stmt->execute([':u' => $username]);
+  $row = $stmt->fetch();
 
-if ($user) {
-    // Login
-    if (!password_verify($password, $user["password"])) {
-        http_response_code(401);
-        echo json_encode(["error" => "Invalid password"]);
-        exit;
+  if (!$row) {
+    $hash = password_hash($password, PASSWORD_BCRYPT);
+    $ins = $pdo->prepare("INSERT INTO users (username, password_hash, role) VALUES (:u, :p, 'user')");
+    $ins->execute([':u' => $username, ':p' => $hash]);
+    $userId = (int)$pdo->lastInsertId();
+  } else {
+    $userId = (int)$row['id'];
+    if (!password_verify($password, (string)$row['password_hash'])) {
+      json_response(['error' => 'Invalid credentials'], 401);
     }
-} else {
-    // Register
-    $hash = password_hash($password, PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
-    $stmt->execute([$username, $hash]);
+  }
 
-    $user = [
-        "id" => $pdo->lastInsertId(),
-        "username" => $username
-    ];
+  $token = create_session($userId);
+  json_response(['token' => $token, 'user_id' => $userId, 'username' => $username]);
 }
-
-echo json_encode([
-    "id" => $user["id"],
-    "username" => $user["username"]
-]);

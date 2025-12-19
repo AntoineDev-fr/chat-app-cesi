@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App CESI</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <div>
+        <div class="title">Chat App CESI</div>
+        <div class="subtitle">API PHP + Front minimal</div>
+      </div>
+    </div>
+    <div class="session">
+      <span id="session-user">Non connecte</span>
+      <button id="logout-btn" class="ghost" type="button">Deconnexion</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel auth">
+      <div class="panel-head">
+        <h2>Connexion / Inscription</h2>
+        <small>Un seul bouton pour les deux (cree le compte si absent).</small>
+      </div>
+      <label class="field">
+        <span>URL API</span>
+        <input id="api-url" type="text" value="http://localhost:8080" placeholder="http://localhost:8080">
+      </label>
+      <label class="field">
+        <span>Username</span>
+        <input id="username" type="text" autocomplete="username">
+      </label>
+      <label class="field">
+        <span>Password</span>
+        <input id="password" type="password" autocomplete="current-password">
+      </label>
+      <button id="login-btn" type="button" class="primary">Se connecter / creer</button>
+      <div id="auth-status" class="status"></div>
+    </section>
+
+    <section class="panel users">
+      <div class="panel-head">
+        <h2>Utilisateurs</h2>
+        <button id="refresh-users" class="ghost" type="button">Rafraichir</button>
+      </div>
+      <div id="users-list" class="list empty">Connecte-toi pour charger les utilisateurs.</div>
+    </section>
+
+    <section class="panel chat">
+      <div class="panel-head">
+        <div>
+          <h2 id="chat-title">Aucune conversation</h2>
+          <small id="chat-subtitle">Selectionne un utilisateur pour afficher l'historique.</small>
+        </div>
+        <div class="badge" id="polling-status">Pause</div>
+      </div>
+
+      <div id="messages" class="messages"></div>
+
+      <form id="send-form" class="send" autocomplete="off">
+        <input id="message-input" type="text" placeholder="Ton message..." disabled>
+        <button class="primary" type="submit" disabled>Envoyer</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

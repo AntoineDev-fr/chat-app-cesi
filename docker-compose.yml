@@ -11,6 +11,12 @@ services:
       - "3306:3306"
     volumes:
       - dbdata:/var/lib/mysql
+      - ./backend/database.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   api:
     build:
@@ -18,11 +24,17 @@ services:
       dockerfile: docker/Dockerfile
     container_name: chat_api
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8080:80"
     volumes:
       - ./backend/src:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_NAME: chatdb
+      DB_USER: chatuser
+      DB_PASS: chatpass
 
 volumes:
   dbdata:

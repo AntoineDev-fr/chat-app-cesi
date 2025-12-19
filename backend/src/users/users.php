@@ -1,8 +1,12 @@
 <?php
-header("Content-Type: application/json");
-require_once "../config/database.php";
+declare(strict_types=1);
 
-$stmt = $pdo->query("SELECT id, username FROM users");
-$users = $stmt->fetchAll();
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/http.php';
 
-echo json_encode($users);
+function list_users(int $excludeId): void {
+  $pdo = db();
+  $stmt = $pdo->prepare("SELECT id, username FROM users WHERE id != :id ORDER BY username ASC");
+  $stmt->execute([':id' => $excludeId]);
+  json_response(['users' => $stmt->fetchAll()]);
+}

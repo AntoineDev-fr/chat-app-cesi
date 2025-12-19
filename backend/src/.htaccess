@@ -1,0 +1,9 @@
+DirectorySlash Off
+RewriteEngine On
+
+# Si c'est un fichier existant, on le sert tel quel (ex: assets)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Tout le reste -> index.php (y compris les chemins qui "ressemblent" à des dossiers)
+RewriteRule ^ index.php [L]
