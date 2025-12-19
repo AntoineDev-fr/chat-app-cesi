@@ -1,0 +1,28 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: chat_db
+    environment:
+      MYSQL_DATABASE: chatdb
+      MYSQL_USER: chatuser
+      MYSQL_PASSWORD: chatpass
+      MYSQL_ROOT_PASSWORD: rootpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile
+    container_name: chat_api
+    depends_on:
+      - db
+    ports:
+      - "8080:80"
+    volumes:
+      - ./backend/src:/var/www/html
+
+volumes:
+  dbdata:
