@@ -29,7 +29,7 @@ function auth_user(): array {
 
   $pdo = db();
   $stmt = $pdo->prepare("
-    SELECT u.id, u.username, u.role
+    SELECT u.id, u.username
     FROM sessions s
     JOIN users u ON u.id = s.user_id
     WHERE s.token_hash = :th

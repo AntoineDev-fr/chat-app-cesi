@@ -31,10 +31,16 @@ if ($path === '/health' && $method === 'GET') {
   json_response(['ok' => true]);
 }
 
-// PUBLIC: POST /auth {username,password}
+// PUBLIC: POST /auth/login {username}
+if ($path === '/auth/login' && $method === 'POST') {
+  $b = get_json_body();
+  login_or_create_user((string)($b['username'] ?? ''));
+}
+
+// PUBLIC: POST /auth {username} (compat)
 if ($path === '/auth' && $method === 'POST') {
   $b = get_json_body();
-  login_or_register((string)($b['username'] ?? ''), (string)($b['password'] ?? ''));
+  login_or_create_user((string)($b['username'] ?? ''));
 }
 
 // Auth required
@@ -43,7 +49,7 @@ $me = (int)$u['id'];
 
 // GET /me
 if ($path === '/me' && $method === 'GET') {
-  json_response(['id' => $me, 'username' => (string)$u['username'], 'role' => (string)$u['role']]);
+  json_response(['id' => $me, 'username' => (string)$u['username']]);
 }
 
 // GET /users
@@ -51,34 +57,27 @@ if ($path === '/users' && $method === 'GET') {
   list_users($me);
 }
 
-// GET /messages/history?with=ID&limit=50
-if ($path === '/messages/history' && $method === 'GET') {
+// GET /messages?with=ID&since=123
+if ($path === '/messages' && $method === 'GET') {
   $with = int_param('with', 0);
+  $since = int_param('since', 0);
   $limit = int_param('limit', 50);
   if ($with <= 0) json_response(['error' => 'Missing with'], 400);
-  get_history($me, $with, $limit);
+  get_messages($me, $with, $since, $limit);
 }
 
-// GET /messages/new?with=ID&since_id=123
-if ($path === '/messages/new' && $method === 'GET') {
-  $with = int_param('with', 0);
-  $since = int_param('since_id', 0);
-  if ($with <= 0) json_response(['error' => 'Missing with'], 400);
-  get_new($me, $with, $since);
-}
-
-// POST /messages/send {to, content}
-if ($path === '/messages/send' && $method === 'POST') {
+// POST /messages {receiver_id, content}
+if ($path === '/messages' && $method === 'POST') {
   $b = get_json_body();
-  $to = (int)($b['to'] ?? 0);
+  $to = (int)($b['receiver_id'] ?? 0);
   $content = (string)($b['content'] ?? '');
-  if ($to <= 0) json_response(['error' => 'Missing to'], 400);
+  if ($to <= 0) json_response(['error' => 'Missing receiver_id'], 400);
   send_message($me, $to, $content);
 }
 
-// DELETE /messages/delete?id=123  (bonus swipe)
-if ($path === '/messages/delete' && $method === 'DELETE') {
-  $id = int_param('id', 0);
+// DELETE /messages/{id}  (bonus swipe)
+if ($method === 'DELETE' && preg_match('#^/messages/(\\d+)$#', $path, $m)) {
+  $id = (int)$m[1];
   if ($id <= 0) json_response(['error' => 'Missing id'], 400);
   delete_message($me, $id);
 }

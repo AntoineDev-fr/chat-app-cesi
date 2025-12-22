@@ -1,8 +1,6 @@
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(64) NOT NULL UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
-  role ENUM('user','admin') NOT NULL DEFAULT 'user',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -21,8 +19,9 @@ CREATE TABLE IF NOT EXISTS messages (
   receiver_id INT NOT NULL,
   content TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL,
   FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX idx_a (sender_id, receiver_id, id),
-  INDEX idx_b (receiver_id, sender_id, id)
+  INDEX idx_a (sender_id, receiver_id, created_at),
+  INDEX idx_b (receiver_id, sender_id, created_at)
 ) ENGINE=InnoDB;
